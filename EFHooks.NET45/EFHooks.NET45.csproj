@@ -65,8 +65,14 @@
     <Compile Include="..\EFHooks\HookEntityMetadata.cs">
       <Link>HookEntityMetadata.cs</Link>
     </Compile>
+    <Compile Include="..\EFHooks\HookRunner.cs">
+      <Link>HookRunner.cs</Link>
+    </Compile>
     <Compile Include="..\EFHooks\IHook.cs">
       <Link>IHook.cs</Link>
+    </Compile>
+    <Compile Include="..\EFHooks\IHookedDbContext.cs">
+      <Link>IHookedDbContext.cs</Link>
     </Compile>
     <Compile Include="..\EFHooks\IPostActionHook.cs">
       <Link>IPostActionHook.cs</Link>

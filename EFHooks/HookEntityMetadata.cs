@@ -12,7 +12,7 @@ namespace EFHooks
 		/// </summary>
 		/// <param name="state">The state.</param>
 		/// <param name="context">The optional existing context (I believe this is usable for migrations).</param>
-		public HookEntityMetadata(EntityState state, HookedDbContext context = null)
+		public HookEntityMetadata(EntityState state, IHookedDbContext context = null)
 		{
 			_state = state;
 			CurrentContext = context;
@@ -27,12 +27,12 @@ namespace EFHooks
 		/// </value>
 		public EntityState State
 		{
-			get { return this._state; }
+			get { return _state; }
 			set
 			{
 				if (_state != value)
 				{
-					this._state = value;
+					_state = value;
 					HasStateChanged = true;
 				}
 			}
@@ -52,6 +52,6 @@ namespace EFHooks
 		/// <value>
 		/// The current context.
 		/// </value>
-		public HookedDbContext CurrentContext { get; private set; }
+		public IHookedDbContext CurrentContext { get; private set; }
 	}
 }
