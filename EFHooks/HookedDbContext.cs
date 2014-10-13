@@ -1,85 +1,49 @@
-﻿using System.Collections.Generic;
-using System.Data.Entity;
+﻿using System.Data.Entity;
 using System.Data.Common;
-using System.Linq;
-using System.Data.Entity.Core.Objects;
-using System.Data.Entity.Infrastructure;
 
 namespace EFHooks
 {
     /// <summary>
     /// An Entity Framework DbContext that can be hooked into by registering EFHooks.IHook objects.
     /// </summary>
-    public abstract partial class HookedDbContext : DbContext, IHookedDbContext
+    public abstract partial class HookedDbContext : DbContext
     {
-        /// <summary>
-        /// The pre-action hooks.
-        /// </summary>
-        protected IList<IPreActionHook> PreHooks;
-        /// <summary>
-        /// The post-action hooks.
-        /// </summary>
-        protected IList<IPostActionHook> PostHooks;
-
-        /// <summary>
-        /// The Post load hooks.
-        /// </summary>
-        protected IList<IPostLoadHook> PostLoadHooks;
-
-        IList<IPreActionHook> IHookedDbContext.PreHooks { get { return PreHooks; } }
-        IList<IPostActionHook> IHookedDbContext.PostHooks { get { return PostHooks; } }
-        IList<IPostLoadHook> IHookedDbContext.PostLoadHooks { get { return PostLoadHooks; } }
+        public DbContextHooks Hooks { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HookedDbContext" /> class, initializing empty lists of hooks.
         /// </summary>
         protected HookedDbContext()
         {
-            PreHooks = new List<IPreActionHook>();
-            PostHooks = new List<IPostActionHook>();
-            PostLoadHooks = new List<IPostLoadHook>();
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += ObjectMaterialized;
+            Hooks = new DbContextHooks(this);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HookedDbContext" /> class, filling <see cref="PreHooks"/> and <see cref="PostHooks"/>.
+        /// Initializes a new instance of the <see cref="HookedDbContext" /> class, filling <see cref="Hooks"/>.
         /// </summary>
         /// <param name="hooks">The hooks.</param>
         protected HookedDbContext(IHook[] hooks)
         {
-            PreHooks = hooks.OfType<IPreActionHook>().ToList();
-            PostHooks = hooks.OfType<IPostActionHook>().ToList();
-            PostLoadHooks = hooks.OfType<IPostLoadHook>().ToList();
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += ObjectMaterialized;
+            Hooks = new DbContextHooks(this, hooks);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HookedDbContext" /> class, using the specified <paramref name="nameOrConnectionString"/>, initializing empty lists of hooks.
         /// </summary>
         /// <param name="nameOrConnectionString">The name or connection string.</param>
-        protected HookedDbContext(string nameOrConnectionString)
-            : base(nameOrConnectionString)
+        protected HookedDbContext(string nameOrConnectionString): base(nameOrConnectionString)
         {
-            PreHooks = new List<IPreActionHook>();
-            PostHooks = new List<IPostActionHook>();
-
-            PostLoadHooks = new List<IPostLoadHook>();
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += ObjectMaterialized;
+            Hooks = new DbContextHooks(this);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HookedDbContext" /> class, using the specified <paramref name="nameOrConnectionString"/>, , filling <see cref="PreHooks"/> and <see cref="PostHooks"/>.
+        /// Initializes a new instance of the <see cref="HookedDbContext" /> class, using the specified <paramref name="nameOrConnectionString"/>, filling <see cref="Hooks"/>.
         /// </summary>
         /// <param name="hooks">The hooks.</param>
         /// <param name="nameOrConnectionString">The name or connection string.</param>
-        protected HookedDbContext(IHook[] hooks, string nameOrConnectionString)
-            : base(nameOrConnectionString)
+        protected HookedDbContext(IHook[] hooks, string nameOrConnectionString): base(nameOrConnectionString)
         {
-            PreHooks = hooks.OfType<IPreActionHook>().ToList();
-            PostHooks = hooks.OfType<IPostActionHook>().ToList();
-
-            PostLoadHooks = hooks.OfType<IPostLoadHook>().ToList();
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += ObjectMaterialized;
+            Hooks = new DbContextHooks(this, hooks);
         }
 
         /// <summary>
@@ -92,11 +56,7 @@ namespace EFHooks
         protected HookedDbContext(DbConnection existingConnection, bool contextOwnsConnection)
             : base(existingConnection, contextOwnsConnection)
         {
-            PreHooks = new List<IPreActionHook>();
-            PostHooks = new List<IPostActionHook>();
-
-            PostLoadHooks = new List<IPostLoadHook>();
-            ((IObjectContextAdapter)this).ObjectContext.ObjectMaterialized += ObjectMaterialized;
+            Hooks = new DbContextHooks(this);
         }
 
         /// <summary>
@@ -110,12 +70,7 @@ namespace EFHooks
         protected HookedDbContext(IHook[] hooks, DbConnection existingConnection, bool contextOwnsConnection)
             : this(existingConnection, contextOwnsConnection)
         {
-            foreach (var hook in hooks)
-            {
-                RegisterHook(hook as IPreActionHook);
-                RegisterHook(hook as IPostActionHook);
-                RegisterHook(hook as IPostLoadHook);
-            }
+            Hooks = new DbContextHooks(this, hooks);
         }
 
         /// <summary>
@@ -124,8 +79,7 @@ namespace EFHooks
         /// <param name="hook">The hook to register.</param>
         public void RegisterHook(IPreActionHook hook)
         {
-            if (hook != null)
-                PreHooks.Add(hook);
+            Hooks.Add(hook);
         }
 
         /// <summary>
@@ -134,8 +88,7 @@ namespace EFHooks
         /// <param name="hook">The hook to register.</param>
         public void RegisterHook(IPostActionHook hook)
         {
-            if (hook != null)
-                PostHooks.Add(hook);
+            Hooks.Add(hook);
         }
 
         /// <summary>
@@ -144,8 +97,7 @@ namespace EFHooks
         /// <param name="hook">The hook to register.</param>
         public void RegisterHook(IPostLoadHook hook)
         {
-            if (hook != null)
-                PostLoadHooks.Add(hook);
+            Hooks.Add(hook);
         }
 
         /// <summary>
@@ -156,21 +108,7 @@ namespace EFHooks
         /// </returns>
         public override int SaveChanges()
         {
-            var hookExecution = new HookRunner(this);
-            hookExecution.RunPreActionHooks();
-            var result = base.SaveChanges();
-            hookExecution.RunPostActionHooks();
-            return result;
-        }
-
-        private void ObjectMaterialized(object sender, ObjectMaterializedEventArgs e)
-        {
-            var metadata = new HookEntityMetadata(EntityState.Unchanged, this);
-
-            foreach (var postLoadHook in PostLoadHooks)
-            {
-                postLoadHook.HookObject(e.Entity, metadata);
-            }
+            return Hooks.SaveChanges(base.SaveChanges);
         }
     }
 }

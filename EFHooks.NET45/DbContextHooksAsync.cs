@@ -1,14 +1,15 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EFHooks
 {
-    partial class HookedDbContext
+    partial class DbContextHooks
     {
-
         /// <summary>
         /// Asynchronously saves all changes made in this context to the underlying database.
         /// </summary>
+        /// <param name="saveChangesAsync"></param>
         /// <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken" /> to observe while waiting for the task to complete.</param>
         /// <returns>
         /// A task that represents the asynchronous save operation.
@@ -18,14 +19,13 @@ namespace EFHooks
         /// Multiple active operations on the same context instance are not supported.  Use 'await' to ensure
         /// that any asynchronous operations have completed before calling another method on this context.
         /// </remarks>
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        public async Task<int> SaveChangesAsync(Func<CancellationToken, Task<int>> saveChangesAsync, CancellationToken cancellationToken)
         {
-            return Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
-        }
-
-        public override Task<int> SaveChangesAsync()
-        {
-            return SaveChangesAsync(CancellationToken.None);
+            var hookExecution = new HookRunner(this);
+            hookExecution.RunPreActionHooks();
+            var result = await saveChangesAsync(cancellationToken);
+            hookExecution.RunPostActionHooks();
+            return result;
         }
     }
 }

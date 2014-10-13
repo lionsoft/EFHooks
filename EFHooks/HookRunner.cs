@@ -6,13 +6,13 @@ namespace EFHooks
 {
     public class HookRunner
     {
-        private readonly IHookedDbContext _ctx;
+        private readonly DbContextHooks _ctx;
         private readonly HookedEntityEntry[] _modifiedEntries;
 
-        public HookRunner(IHookedDbContext ctx)
+        public HookRunner(DbContextHooks ctx)
         {
             _ctx = ctx;
-            _modifiedEntries = ctx.ChangeTracker.Entries()
+            _modifiedEntries = ctx.Context.ChangeTracker.Entries()
                 .Where(x => x.State != EntityState.Unchanged && x.State != EntityState.Detached)
                 .Select(x => new HookedEntityEntry
                 {
@@ -27,7 +27,7 @@ namespace EFHooks
         {
             ExecutePreActionHooks(_modifiedEntries, false);//Regardless of validation (executing the hook possibly fixes validation errors)
 
-            var hasValidationErrors = _ctx.Configuration.ValidateOnSaveEnabled && _ctx.ChangeTracker.Entries().Any(x => x.State != EntityState.Unchanged && !x.GetValidationResult().IsValid);
+            var hasValidationErrors = _ctx.Context.Configuration.ValidateOnSaveEnabled && _ctx.Context.ChangeTracker.Entries().Any(x => x.State != EntityState.Unchanged && !x.GetValidationResult().IsValid);
 
             if (!hasValidationErrors)
             {
@@ -49,7 +49,7 @@ namespace EFHooks
 
                 foreach (var hook in _ctx.PreHooks.Where(x => (x.HookStates & entry.PreSaveState) == entry.PreSaveState && x.RequiresValidation == requiresValidation))
                 {
-                    var metadata = new HookEntityMetadata(entityEntry.PreSaveState, _ctx);
+                    var metadata = new HookEntityMetadata(HookType.Pre, entityEntry, entityEntry.PreSaveState, _ctx.Context);
                     hook.HookObject(entityEntry.Entity, metadata);
 
                     if (metadata.HasStateChanged)
@@ -72,7 +72,7 @@ namespace EFHooks
                     //Obtains hooks that 'listen' to one or more Entity States
                     foreach (var hook in _ctx.PostHooks.Where(x => (x.HookStates & entry.PreSaveState) == entry.PreSaveState))
                     {
-                        var metadata = new HookEntityMetadata(entityEntry.PreSaveState, _ctx);
+                        var metadata = new HookEntityMetadata(HookType.Post, entityEntry, entityEntry.PreSaveState, _ctx.Context);
                         hook.HookObject(entityEntry.Entity, metadata);
                     }
                 }

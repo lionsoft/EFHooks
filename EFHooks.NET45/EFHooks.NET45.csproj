@@ -56,6 +56,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\EFHooks\DbContextHooks.cs">
+      <Link>DbContextHooks.cs</Link>
+    </Compile>
     <Compile Include="..\EFHooks\HookedDbContext.cs">
       <Link>HookedDbContext.cs</Link>
     </Compile>
@@ -67,6 +70,9 @@
     </Compile>
     <Compile Include="..\EFHooks\HookRunner.cs">
       <Link>HookRunner.cs</Link>
+    </Compile>
+    <Compile Include="..\EFHooks\HookType.cs">
+      <Link>HookType.cs</Link>
     </Compile>
     <Compile Include="..\EFHooks\IHook.cs">
       <Link>IHook.cs</Link>
@@ -113,6 +119,7 @@
     <Compile Include="..\EFHooks\Properties\Constants.cs">
       <Link>Properties\Constants.cs</Link>
     </Compile>
+    <Compile Include="DbContextHooksAsync.cs" />
     <Compile Include="HookedDbContextAsync.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
