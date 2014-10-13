@@ -1,4 +1,4 @@
-The main differences from source fork is the framework logic is implemented in separate class `DbContextHooks` that allowed to add hooking functionality to any `DbContext` successors in easy way. For example, if we want to extend `IdentityDbContext<TUser>` all that we need is:
+The main differences from the source fork is the framework logic is implemented in separate class `DbContextHooks` that allowed to add hooking functionality to any `DbContext` successors in easy way. For example, if you want to extend `IdentityDbContext<TUser>` all that you need is:
     
     class ApplicationDbContext : IdentityDbContext<User>
     {
