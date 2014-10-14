@@ -12,7 +12,7 @@ The main differences from the source fork is the framework logic is implemented 
         
         public override int SaveChanges()
         {
-            return Hooks.SaveChanges(base.SaveChanges);
+            return return Hooks == null ? base.SaveChanges() : Hooks.SaveChanges(base.SaveChanges);
         }
 
         public override Task<int> SaveChangesAsync()
@@ -22,7 +22,7 @@ The main differences from the source fork is the framework logic is implemented 
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            return Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
+            return Hooks == null ? base.SaveChangesAsync(cancellationToken) : Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
         }
     }
 
