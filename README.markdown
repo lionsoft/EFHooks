@@ -1,3 +1,33 @@
+The main differences from the source fork is the framework logic is implemented in separate class `DbContextHooks` that allowed to add hooking functionality to any `DbContext` successors in easy way. For example, if you want to extend `IdentityDbContext<TUser>` all that you need is:
+    
+    class ApplicationDbContext : IdentityDbContext<User>
+    {
+        public DbContextHooks Hooks { get; private set; }
+
+        public ApplicationDbContext(): base("DefaultConnection")
+        {
+            Hooks = new DbContextHooks(this);
+            Hooks.Add(new TimestampPreInsertHook());
+        }
+        
+        public override int SaveChanges()
+        {
+            return Hooks.SaveChanges(base.SaveChanges);
+        }
+
+        public override Task<int> SaveChangesAsync()
+        {
+            return SaveChangesAsync(CancellationToken.None);
+        }
+        
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        {
+            return Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
+        }
+    }
+
+---
+
 EFHooks is a framework to assist in hooking into the Entity Framework Code First before and after insert, update and delete actions are performed on the database.
 
 EFHooks is designed to lend itself to code that is easy to unit test with the least amount of mocking possible and without cluttering up your DbContext class with hooking code.  It also is designed to play well with IoC containers.
