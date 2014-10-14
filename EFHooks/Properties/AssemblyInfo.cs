@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("EFHooks")]
-[assembly: AssemblyDescription("Entity Framework Hooking Tools")]
+[assembly: AssemblyDescription("Lion Entity Framework Hooking Tools")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Visoft, Inc., Robert Sirre software development")]
+[assembly: AssemblyCompany("LionSoft development")]
 [assembly: AssemblyProduct("EFHooks")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

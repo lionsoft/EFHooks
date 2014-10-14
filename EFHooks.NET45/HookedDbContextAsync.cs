@@ -20,7 +20,7 @@ namespace EFHooks
         /// </remarks>
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            return Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
+            return Hooks == null ? base.SaveChangesAsync(cancellationToken) : Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
         }
 
         public override Task<int> SaveChangesAsync()

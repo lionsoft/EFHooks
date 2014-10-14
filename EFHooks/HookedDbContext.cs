@@ -108,7 +108,7 @@ namespace EFHooks
         /// </returns>
         public override int SaveChanges()
         {
-            return Hooks.SaveChanges(base.SaveChanges);
+            return Hooks == null ? base.SaveChanges() : Hooks.SaveChanges(base.SaveChanges);
         }
     }
 }
