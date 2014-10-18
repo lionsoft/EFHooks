@@ -2,17 +2,23 @@ The main differences from the source fork is the framework logic is implemented 
     
     class ApplicationDbContext : IdentityDbContext<User>
     {
-        public DbContextHooks Hooks { get; private set; }
-
-        public ApplicationDbContext(): base("DefaultConnection")
+        public DbContextHooks _hooks;
+        public DbContextHooks Hooks
         {
-            Hooks = new DbContextHooks(this);
-            Hooks.Add(new TimestampPreInsertHook());
+            get
+            {
+                if (_hooks == null)
+                {
+                    _hooks = new DbContextHooks(this);
+                    _hooks.Add(new TimestampPreInsertHook());
+                }
+                return _hooks;
+            }
         }
-        
+
         public override int SaveChanges()
         {
-            return return Hooks == null ? base.SaveChanges() : Hooks.SaveChanges(base.SaveChanges);
+            return Hooks.SaveChanges(base.SaveChanges);
         }
 
         public override Task<int> SaveChangesAsync()
@@ -22,7 +28,7 @@ The main differences from the source fork is the framework logic is implemented 
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            return Hooks == null ? base.SaveChangesAsync(cancellationToken) : Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
+            return Hooks.SaveChangesAsync(base.SaveChangesAsync, cancellationToken);
         }
     }
 
